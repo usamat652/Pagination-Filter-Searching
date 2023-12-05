@@ -58,6 +58,37 @@ userRouter.get('/search', async (req, res) => {
 });
 
 
+userRouter.get('/single-search', async (req, res) => {
+    try {
+        const { keyword } = req.query;
+
+        if (!keyword) {
+            return res.status(400).json({ error: 'Keyword is required for search.' });
+        }
+
+        const query = {
+            $or: [
+                { title: { $regex: new RegExp(keyword, 'i') } },
+                { genre: { $regex: new RegExp(keyword, 'i') } },
+            ],
+        };
+
+        // Handle releaseYear separately without using a regular expression
+        if (!isNaN(keyword)) {
+            query.$or.push({ releaseYear: keyword });
+        }
+
+        // Execute the search query
+        const result = await movieModel.find(query);
+
+        res.status(200).json(result);
+    } catch (error) {
+        console.error('Error searching movies:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+
 export default userRouter;
 
 
